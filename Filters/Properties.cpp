@@ -289,21 +289,13 @@ void CVCamProp::GetControlValues()
 
 	GetDlgItemText(m_Dlg, IDC_EDIT_WIDTH, v, 1024);
 
-#ifdef UNICODE
 	char szANSI[STR_MAX_LENGTH];
 
 	int rc = WideCharToMultiByte(CP_ACP, 0, v, -1, szANSI, STR_MAX_LENGTH, NULL, NULL);
 	m_Width = atoi(szANSI);
-#else
-	m_Width = atoi(szANSI);
-#endif
 
 	GetDlgItemText(m_Dlg, IDC_EDIT_HEIGHT, v, 1024);
 
-#ifdef UNICODE
 	rc = WideCharToMultiByte(CP_ACP, 0, v, -1, szANSI, STR_MAX_LENGTH, NULL, NULL);
 	m_Height = atoi(szANSI);
-#else
-	m_Height = atoi(szANSI);
-#endif
 }

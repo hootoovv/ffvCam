@@ -9,6 +9,16 @@
 #include "properties.h"
 #include "filters.h"
 
+#include <boost/filesystem.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+
+using namespace std;
+using namespace boost;
+
+namespace fs = boost::filesystem;
+namespace pt = boost::property_tree;
+
 //////////////////////////////////////////////////////////////////////////
 //  CVCam is the source filter which masquerades as a capture device
 //////////////////////////////////////////////////////////////////////////
@@ -408,12 +418,36 @@ HRESULT CVCamStream::put_IVirtualCamParams(BSTR url, BOOL resize, int width, int
 
 void CVCamStream::LoadProfile()
 {
-    m_Url = L"d:\\temp\\1.mpg";
-    m_Resize = TRUE;
-    m_Width = 1280;
-    m_Height = 720;
-    m_Index = 1;
-    m_Mode = 0;
+    TCHAR szPath[MAX_PATH];
+    GetEnvironmentVariable(L"USERPROFILE", szPath, MAX_PATH);
+
+    fs::path configPath(szPath);
+    configPath.append(".ffvcam");
+    configPath.append("ffvcam.ini");
+
+    pt::ptree tree;
+
+    if (fs::exists(configPath.string()))
+    {
+        pt::read_ini(configPath.string(), tree);
+        string url = tree.get("Settings.Source", "");
+
+        m_Url = url.c_str();
+        m_Resize = tree.get("Settings.Resize", false);
+        m_Width = tree.get("Settings.Width", 1280);
+        m_Height = tree.get("Settings.Height", 720);
+        m_Index = tree.get("Settings.Index", 1);
+        m_Mode = tree.get("Settings.Mode", 0);
+    }
+    else
+    {
+        m_Url = L"";
+        m_Resize = false;
+        m_Width = 1280;
+        m_Height = 720;
+        m_Index = 1;
+        m_Mode = 0;
+    }
 
     m_listSize[0] = { m_Width, m_Height };
 
@@ -431,6 +465,30 @@ void CVCamStream::LoadProfile()
 
 void CVCamStream::SaveProfile()
 {
+    TCHAR szPath[MAX_PATH];
+    GetEnvironmentVariable(L"USERPROFILE", szPath, MAX_PATH);
+
+    fs::path configPath(szPath);
+    configPath.append(".ffvcam");
+    if (!fs::exists(configPath.string()))
+        fs::create_directory(configPath);
+
+    configPath.append("ffvcam.ini");
+
+    pt::ptree tree;
+
+    char szUtf8[MAX_PATH];
+
+    WideCharToMultiByte(CP_UTF8, 0, m_Url, -1, szUtf8, MAX_PATH, NULL, NULL);
+
+    tree.put("Settings.Source", szUtf8);
+    tree.put("Settings.Resize", m_Resize);
+    tree.put("Settings.Width", m_Width);
+    tree.put("Settings.Height", m_Height);
+    tree.put("Settings.Index", m_Index);
+    tree.put("Settings.Mode", m_Mode);
+
+    pt::write_ini(configPath.string(), tree);
 
 }
 

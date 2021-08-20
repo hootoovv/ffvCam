@@ -206,6 +206,7 @@
     <ClCompile Include="Dll.cpp" />
     <ClCompile Include="Filters.cpp" />
     <ClCompile Include="Properties.cpp" />
+    <ClCompile Include="streamreader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Filters.def" />
@@ -215,6 +216,7 @@
     <ClInclude Include="Filters.h" />
     <ClInclude Include="Properties.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="streamreader.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Filters.rc" />

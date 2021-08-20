@@ -1,6 +1,8 @@
 #pragma once
-#include "Resource.h"
-#include "atlbase.h"
+
+#include <atlbase.h>
+
+#include "resource.h"
 
 class CVCamProp : public CBasePropertyPage
 {

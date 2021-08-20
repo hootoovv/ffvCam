@@ -1,3 +1,6 @@
 *.bak
 /.vs
 /bin
+/boost_1_76_0
+/ffmpeg4.4
+/msdk

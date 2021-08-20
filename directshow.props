@@ -3,15 +3,18 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" >
     <DirectShowSamplesDir>D:\Dev\Github\Windows-classic-samples\Samples\Win7Samples\multimedia\directshow\baseclasses</DirectShowSamplesDir>
+    <FFMpegDir>D:\Dev\Github\zktr\ffvcam\boost_1_76_0</FFMpegDir>
+    <MSDKDir>D:\Dev\Github\zktr\ffvcam\msdk</MSDKDir>
+    <BoostDir>D:\Dev\Github\zktr\ffvcam\ffmpeg4.4</BoostDir>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(DirectShowSamplesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(DirectShowSamplesDir);$(FFMpegDir)\include;$(MSDKDir)\include;$(BoostDir)\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(DirectShowSamplesDir)\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%(AdditionalDependencies);BaseClasses.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(DirectShowSamplesDir)\$(Platform)\$(Configuration);$(FFMpegDir)\lib;$(BoostDir)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies);BaseClasses.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
