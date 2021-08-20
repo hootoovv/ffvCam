@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  This file contains routines to register / Unregister the 
-//  Directshow filter 'Virtual Cam'
+//  Directshow filter 'Virtual iCam'
 //  We do not use the inbuilt BaseClasses routines as we need to register as
 //  a capture source
 //////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,9 @@
 #include <streams.h>
 #include <initguid.h>
 #include <dllsetup.h>
+#include "common.h"
 #include "filters.h"
+#include "properties.h"
 
 #pragma comment(lib, "winmm.lib")
 
@@ -17,10 +19,6 @@
 
 STDAPI AMovieSetupRegisterServer( CLSID   clsServer, LPCWSTR szDescription, LPCWSTR szFileName, LPCWSTR szThreadingModel = L"Both", LPCWSTR szServerType     = L"InprocServer32" );
 STDAPI AMovieSetupUnregisterServer( CLSID clsServer );
-
-// {8E14549A-DB61-4309-AFA1-3578E927E933}
-DEFINE_GUID(CLSID_VirtualCam,
-            0x8e14549a, 0xdb61, 0x4309, 0xaf, 0xa1, 0x35, 0x78, 0xe9, 0x27, 0xe9, 0x33);
 
 const AMOVIESETUP_MEDIATYPE AMSMediaTypesVCam = 
 { 
@@ -44,7 +42,7 @@ const AMOVIESETUP_PIN AMSPinVCam=
 const AMOVIESETUP_FILTER AMSFilterVCam =
 {
     &CLSID_VirtualCam,  // Filter CLSID
-    L"Virtual Cam",     // String name
+    LCAM_NAME,     		// String name
     MERIT_DO_NOT_USE,      // Filter merit
     1,                     // Number pins
     &AMSPinVCam             // Pin details
@@ -53,11 +51,18 @@ const AMOVIESETUP_FILTER AMSFilterVCam =
 CFactoryTemplate g_Templates[] = 
 {
     {
-        L"Virtual Cam",
+        LCAM_NAME,
         &CLSID_VirtualCam,
         CVCam::CreateInstance,
         NULL,
         &AMSFilterVCam
+    },
+    {
+        LCAM_PROP_NAME,
+        &CLSID_VirtualCamProp,
+        CVCamProp::CreateInstance,
+        NULL,
+        NULL
     },
 
 };
@@ -80,7 +85,7 @@ STDAPI RegisterFilters( BOOL bRegister )
     hr = CoInitialize(0);
     if(bRegister)
     {
-        hr = AMovieSetupRegisterServer(CLSID_VirtualCam, L"Virtual Cam", achFileName, L"Both", L"InprocServer32");
+        hr = AMovieSetupRegisterServer(CLSID_VirtualCam, LCAM_NAME, achFileName, L"Both", L"InprocServer32");
     }
 
     if( SUCCEEDED(hr) )
@@ -89,15 +94,15 @@ STDAPI RegisterFilters( BOOL bRegister )
         hr = CreateComObject( CLSID_FilterMapper2, IID_IFilterMapper2, fm );
         if( SUCCEEDED(hr) )
         {
-            if(bRegister)
+            if (bRegister)
             {
-                IMoniker *pMoniker = 0;
+                IMoniker* pMoniker = 0;
                 REGFILTER2 rf2;
                 rf2.dwVersion = 1;
                 rf2.dwMerit = MERIT_DO_NOT_USE;
                 rf2.cPins = 1;
                 rf2.rgPins = &AMSPinVCam;
-                hr = fm->RegisterFilter(CLSID_VirtualCam, L"Virtual Cam", &pMoniker, &CLSID_VideoInputDeviceCategory, NULL, &rf2);
+                hr = fm->RegisterFilter(CLSID_VirtualCam, LCAM_NAME, &pMoniker, &CLSID_VideoInputDeviceCategory, NULL, &rf2);
             }
             else
             {
@@ -121,12 +126,14 @@ STDAPI RegisterFilters( BOOL bRegister )
 
 STDAPI DllRegisterServer()
 {
-    return RegisterFilters(TRUE);
+	AMovieDllRegisterServer2(TRUE);
+	return RegisterFilters(TRUE);
 }
 
 STDAPI DllUnregisterServer()
 {
-    return RegisterFilters(FALSE);
+	RegisterFilters(FALSE);
+	return AMovieDllRegisterServer2(FALSE);
 }
 
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);

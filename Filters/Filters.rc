@@ -1,0 +1,193 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 非特定语言(默认值) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(936)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROPPAGE DIALOGEX 0, 0, 254, 221
+STYLE DS_ABSALIGN | DS_SETFONT | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_TRANSPARENT
+FONT 8, "Pin Properties", 400, 0, 0x1
+BEGIN
+    LTEXT           "Media Source: Local file or URL(RTSP, RTMP, M3U8, etc.)",IDC_STATIC,7,7,240,8
+    EDITTEXT        IDC_EDIT_URL,7,19,223,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BUTTON_BROWSE,233,18,14,14
+    LTEXT           "",IDC_STATIC,7,40,240,1,SS_SUNKEN
+    LTEXT           "Output",IDC_STATIC,7,45,240,8
+    CONTROL         "Same as source",IDC_RADIO_SOURCE,"Button",BS_AUTORADIOBUTTON,7,57,232,10
+    CONTROL         "Resize to fix size",IDC_RADIO_RESIZE,"Button",BS_AUTORADIOBUTTON,7,72,232,10
+    GROUPBOX        "",IDC_STATIC,14,83,225,109
+    LTEXT           "16:9",IDC_STATIC,38,93,32,8
+    LTEXT           "4:3",IDC_STATIC,108,93,22,8
+    LTEXT           "Others",IDC_STATIC,182,93,41,8
+    CONTROL         "1920x1080",IDC_RADIO_1920x1080,"Button",BS_AUTORADIOBUTTON,20,105,64,10
+    CONTROL         "1280x720",IDC_RADIO_1280x720,"Button",BS_AUTORADIOBUTTON,20,120,64,10
+    CONTROL         "960x540",IDC_RADIO_960x540,"Button",BS_AUTORADIOBUTTON,20,135,64,10
+    CONTROL         "640x360",IDC_RADIO_640x360,"Button",BS_AUTORADIOBUTTON,20,150,64,10
+    CONTROL         "1440x1080",IDC_RADIO_1440x1080,"Button",BS_AUTORADIOBUTTON,90,105,60,10
+    CONTROL         "960x720",IDC_RADIO_960x720,"Button",BS_AUTORADIOBUTTON,90,120,60,10
+    CONTROL         "640x480",IDC_RADIO_640x480,"Button",BS_AUTORADIOBUTTON,90,135,60,10
+    CONTROL         "480x360",IDC_RADIO_430x360,"Button",BS_AUTORADIOBUTTON,90,150,60,10
+    CONTROL         "Customization",IDC_RADIO_Custmization,"Button",BS_AUTORADIOBUTTON,157,105,77,10
+    EDITTEXT        IDC_EDIT_WIDTH,168,118,27,14,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "x",IDC_STATIC,199,121,8,8
+    EDITTEXT        IDC_EDIT_HEIGHT,206,118,27,14,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "",IDC_STATIC,20,166,213,1,SS_SUNKEN
+    LTEXT           "Resize Mode",IDC_STATIC,20,175,63,8
+    CONTROL         "Pan",IDC_RADIO_FIT,"Button",BS_AUTORADIOBUTTON,90,174,42,10
+    CONTROL         "Stretch",IDC_RADIO_STRETCH,"Button",BS_AUTORADIOBUTTON,190,174,47,10
+    CONTROL         "Crop",IDC_RADIO_CLIP,"Button",BS_AUTORADIOBUTTON,137,173,33,10
+    LTEXT           "",IDC_STATUS,7,199,240,15,SS_SUNKEN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PROPPAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 214
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_PROPPAGE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040004b0"
+        BEGIN
+            VALUE "CompanyName", "Kevin Wu"
+            VALUE "FileDescription", "ffvCam"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "ffvcam.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2021"
+            VALUE "OriginalFilename", "ffvcam.dll"
+            VALUE "ProductName", "ffvCam"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x400, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "ffvCam Properties"
+END
+
+#endif    // 非特定语言(默认值) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

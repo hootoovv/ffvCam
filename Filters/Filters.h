@@ -1,8 +1,15 @@
 #pragma once
 
+#include "atlbase.h"
+
 #define DECLARE_PTR(type, ptr, expr) type* ptr = (type*)(expr);
 
-EXTERN_C const GUID CLSID_VirtualCam;
+struct Video_Size
+{
+    int w;
+    int h;
+};
+
 
 class CVCamStream;
 class CVCam : public CSource
@@ -20,7 +27,7 @@ private:
     CVCam(LPUNKNOWN lpunk, HRESULT *phr);
 };
 
-class CVCamStream : public CSourceStream, public IAMStreamConfig, public IKsPropertySet
+class CVCamStream : public CSourceStream, public IAMStreamConfig, public IKsPropertySet, public ISpecifyPropertyPages, public IVirtualCam
 {
 public:
 
@@ -51,6 +58,9 @@ public:
     HRESULT STDMETHODCALLTYPE Get(REFGUID guidPropSet, DWORD dwPropID, void *pInstanceData,DWORD cbInstanceData, void *pPropData, DWORD cbPropData, DWORD *pcbReturned);
     HRESULT STDMETHODCALLTYPE QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport);
     
+    // ISpecifyPropertyPages interface
+    STDMETHODIMP GetPages(CAUUID* pPages);
+
     //////////////////////////////////////////////////////////////////////////
     //  CSourceStream
     //////////////////////////////////////////////////////////////////////////
@@ -63,7 +73,25 @@ public:
     HRESULT GetMediaType(int iPosition, CMediaType *pmt);
     HRESULT SetMediaType(const CMediaType *pmt);
     HRESULT OnThreadCreate(void);
-    
+    HRESULT OnThreadDestroy(void);
+
+    // These implement the custom IIScreenCam interface
+    STDMETHODIMP get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, int* height, int* index, int* mode);
+    STDMETHODIMP put_IVirtualCamParams(BSTR url, BOOL resize, int width, int height, int index, int mode);
+
+    void LoadProfile();
+    void SaveProfile();
+
+    CCritSec    m_camLock;
+    BOOL    m_bStop;
+
+    CComBSTR		m_Url;
+    BOOL			m_Resize;
+    int				m_Width;
+    int				m_Height;
+    int				m_Index;
+    int				m_Mode;
+
 private:
     CVCam *m_pParent;
     REFERENCE_TIME m_rtLastTime;
@@ -71,6 +99,9 @@ private:
     CCritSec m_cSharedState;
     IReferenceClock *m_pClock;
 
+    HANDLE m_hThread;
+
+    Video_Size m_listSize[9];
 };
 
 
