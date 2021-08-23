@@ -56,20 +56,64 @@ DWORD WINAPI CamThreadProc(LPVOID lpParam)
 {
     CVCamStream* pStream = (CVCamStream*)lpParam;
 
-    CVideoSource src;
-    int w = 1280;
-    int h = 720;
-    int f = 0;
-    bool rc = src.Check(pStream->m_Url, &w, &h, &f);
+    bool resize = false;
 
-    if (rc)
     {
-        
+        CVideoSource src;
+        int src_w = 0;
+        int src_h = 0;
+        int f = 0;
+        bool rc = src.Check(pStream->m_Url, &src_w, &src_h, &f);
+
+        if (pStream->m_currentWidth != src_w || pStream->m_currentHeight != src_h)
+        {
+            // anyway need resize
+            resize = true;
+        }
+        else
+        {
+            // no need to resize, no matter how it configured.
+            resize = false;
+        }
     }
+
+    CVideoSource source;
+
+    source.Start(pStream->m_Url, true, true, false, resize, pStream->m_currentWidth, pStream->m_currentHeight, pStream->m_Mode);
+    source.SetFrame(pStream->m_frame);
 
     while (!pStream->m_bStop)
     {
+        // restart stopped stream
+        if (source.shouldRestart())
+        {
+            if (source.shouldStop())
+                source.Stop();
+
+            // check retry interval, the interval is keep increasing from 1s to 15s max.
+            // means: once disconnect, will retry connect quite frequently, like 1s, 2s, 3s, etc. but will get to slower and slower untill max 15s interval. 
+            const std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+            const int Max_Retry = 15;
+            int interval = 1000 * min(source.retry_, Max_Retry);
+            std::chrono::milliseconds timeout(interval);
+
+            if (now - source.lastRetry_ > timeout)
+            {
+                bool rc = source.Start(pStream->m_Url, true, true, false, resize, pStream->m_currentWidth, pStream->m_currentHeight, pStream->m_Mode);
+
+                if (rc)
+                    source.retry_ = 0;
+                else
+                    source.retry_++;
+
+                source.lastRetry_ = now;
+            }
+        }
+
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     }
+
+    source.Stop();
 
     return NOERROR;
 }
@@ -92,10 +136,14 @@ CVCamStream::CVCamStream(HRESULT *phr, CVCam *pParent, LPCWSTR pPinName) :
     m_currentWidth = pvi->bmiHeader.biWidth;
     m_currentHeight = pvi->bmiHeader.biHeight;
 
+    int frameSize = m_currentWidth * m_currentHeight * 3;// 12 / 8;
+    m_frame = new BYTE[frameSize];
+    ZeroMemory(m_frame, frameSize);
 }
 
 CVCamStream::~CVCamStream()
 {
+    delete[] m_frame;
 } 
 
 HRESULT CVCamStream::QueryInterface(REFIID riid, void **ppv)
@@ -150,8 +198,8 @@ HRESULT CVCamStream::FillBuffer(IMediaSample *pms)
     long lDataLen;
     pms->GetPointer(&pData);
     lDataLen = pms->GetSize();
-    for(int i = 0; i < lDataLen; ++i)
-        pData[i] = rand();
+    
+    memcpy(pData, m_frame, lDataLen);
 
     return NOERROR;
 } // FillBuffer

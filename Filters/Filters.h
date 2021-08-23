@@ -90,6 +90,8 @@ public:
     int				m_Index;
     int				m_Mode;
 
+	BYTE*   m_frame;
+
     int m_currentWidth;
     int m_currentHeight;
     int m_sourceWidth;
@@ -99,7 +101,7 @@ private:
     CVCam *m_pParent;
     REFERENCE_TIME m_rtLastTime;
     HBITMAP m_hLogoBmp;
-    CCritSec m_cSharedState;
+    //CCritSec m_cSharedState;
     IReferenceClock *m_pClock;
 
     HANDLE m_hThread;

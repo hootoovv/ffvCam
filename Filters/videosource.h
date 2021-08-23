@@ -23,6 +23,8 @@ public:
     bool shouldStop();
     bool isRunning();
 
+    void SetFrame(uint8_t* frame) { frame_ = frame; };
+
     std::chrono::system_clock::time_point lastRetry_;
     int retry_ = 0;
 
@@ -41,4 +43,5 @@ private:
     bool shouldRestart_ = false;
     bool running_ = false;
 
+    uint8_t* frame_ = nullptr;
 };

@@ -43,6 +43,16 @@ void CVideoSource::OnVideoData(uint8_t* data, int len, int64_t ts, bool key)
 
 void CVideoSource::OnFrameData(uint8_t** data, uint32_t* linesize, uint32_t w, uint32_t h, int64_t ts)
 {
+	if (frame_)
+	{
+		int pos = 0;
+		memcpy(frame_, data[0], linesize[0]*h);
+		pos = linesize[0] * h;
+		memcpy(frame_ + pos, data[1], linesize[1]*h/2);
+		pos += linesize[1] * h/2;
+		memcpy(frame_ + pos, data[2], linesize[2]*h/2);
+		//pos += linesize[2] * h/2;
+	}
 }
 
 void CVideoSource::OnPCMData(uint8_t* data, uint32_t len, int64_t ts)
