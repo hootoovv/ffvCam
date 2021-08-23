@@ -23,12 +23,15 @@ extern "C" {
     DECLARE_INTERFACE_(IVirtualCam, IUnknown)
     {
         STDMETHOD(get_IVirtualCamParams) (THIS_
-            BSTR* url,
-            BOOL* resize,
+            BSTR * url,
+            BOOL * resize,
             int* width,
             int* height,
             int* index,
-            int* mode
+            int* mode,
+            BOOL * loop,
+            BOOL * retry,
+            BOOL * qsv
             ) PURE;
 
         STDMETHOD(put_IVirtualCamParams) (THIS_
@@ -37,7 +40,10 @@ extern "C" {
             int width,
             int height,
             int index,
-            int mode
+            int mode,
+            BOOL loop,
+            BOOL retry,
+            BOOL qsv
             ) PURE;
     };
 

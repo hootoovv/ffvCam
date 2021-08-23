@@ -49,7 +49,7 @@ HRESULT CVCamProp::OnConnect(IUnknown *pUnknown)
 
     CheckPointer(m_vCam, E_FAIL);
 	BSTR url;
-    m_vCam->get_IVirtualCamParams(&url, &m_Resize, &m_Width, &m_Height, &m_Index, &m_Mode);
+    m_vCam->get_IVirtualCamParams(&url, &m_Resize, &m_Width, &m_Height, &m_Index, &m_Mode, &m_Loop, &m_Retry, &m_Qsv);
 	m_Url = url;
 
     m_bIsInitialized = FALSE;
@@ -87,7 +87,7 @@ HRESULT CVCamProp::OnApplyChanges()
 
 	CheckPointer(m_vCam, E_POINTER);
 	BSTR url = m_Url.Copy();
-    m_vCam->put_IVirtualCamParams(url, m_Resize, m_Width, m_Height, m_Index, m_Mode);
+    m_vCam->put_IVirtualCamParams(url, m_Resize, m_Width, m_Height, m_Index, m_Mode, m_Loop, m_Retry, m_Qsv);
 
     return NOERROR;
 }
@@ -107,6 +107,10 @@ INT_PTR CVCamProp::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			}
 
 			SetDlgItemText(m_Dlg, IDC_EDIT_URL, m_Url);
+
+			CheckDlgButton(m_Dlg, IDC_CHECK_LOOP, m_Loop);
+			CheckDlgButton(m_Dlg, IDC_CHECK_RETRY, m_Retry);
+			CheckDlgButton(m_Dlg, IDC_CHECK_QSV, m_Qsv);
 
 			int index = 0;
 			
@@ -283,6 +287,21 @@ INT_PTR CVCamProp::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 }
 void CVCamProp::GetControlValues()
 {
+	if (IsDlgButtonChecked(m_Dlg, IDC_CHECK_LOOP))
+		m_Loop = TRUE;
+	else
+		m_Loop = FALSE;
+
+	if (IsDlgButtonChecked(m_Dlg, IDC_CHECK_RETRY))
+		m_Retry = TRUE;
+	else
+		m_Retry = FALSE;
+
+	if (IsDlgButtonChecked(m_Dlg, IDC_CHECK_QSV))
+		m_Qsv = TRUE;
+	else
+		m_Qsv = FALSE;
+
 	if (IsDlgButtonChecked(m_Dlg, IDC_RADIO_RESIZE))
 		m_Resize = TRUE;
 	else

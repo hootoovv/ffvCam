@@ -29,6 +29,9 @@ private:
 	int				m_Height;
 	int				m_Index;
 	int				m_Mode;
+	BOOL            m_Loop;
+	BOOL            m_Retry;
+	BOOL            m_Qsv;
 
 	IVirtualCam*	m_vCam;
 };

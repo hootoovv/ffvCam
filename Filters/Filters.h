@@ -74,8 +74,8 @@ public:
     HRESULT OnThreadDestroy(void);
 
     // These implement the custom IIScreenCam interface
-    STDMETHODIMP get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, int* height, int* index, int* mode);
-    STDMETHODIMP put_IVirtualCamParams(BSTR url, BOOL resize, int width, int height, int index, int mode);
+    STDMETHODIMP get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, int* height, int* index, int* mode, BOOL* loop, BOOL* retry, BOOL* qsv);
+    STDMETHODIMP put_IVirtualCamParams(BSTR url, BOOL resize, int width, int height, int index, int mode, BOOL loop, BOOL retry, BOOL qsv);
 
     void LoadProfile();
     void SaveProfile();
@@ -89,6 +89,9 @@ public:
     int				m_Height;
     int				m_Index;
     int				m_Mode;
+    BOOL            m_Loop;
+    BOOL            m_Retry;
+    BOOL            m_Qsv;
 
 	BYTE*   m_frame;
 
@@ -97,11 +100,12 @@ public:
     int m_sourceWidth;
     int m_sourceHeight;
 
+    CCritSec m_cSharedFrame;
+
 private:
     CVCam *m_pParent;
     REFERENCE_TIME m_rtLastTime;
     HBITMAP m_hLogoBmp;
-    //CCritSec m_cSharedState;
     IReferenceClock *m_pClock;
 
     HANDLE m_hThread;

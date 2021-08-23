@@ -1,4 +1,7 @@
 #pragma once
+
+#include <streams.h>
+
 #include "streamreader.h"
 
 class CVideoSource : public IStreamReaderCallback
@@ -23,7 +26,7 @@ public:
     bool shouldStop();
     bool isRunning();
 
-    void SetFrame(uint8_t* frame) { frame_ = frame; };
+    void SetFrame(uint8_t* frame, CCritSec* sec) { frame_ = frame; section_ = sec; };
 
     std::chrono::system_clock::time_point lastRetry_;
     int retry_ = 0;
@@ -44,4 +47,5 @@ private:
     bool running_ = false;
 
     uint8_t* frame_ = nullptr;
+    CCritSec* section_ = nullptr;
 };

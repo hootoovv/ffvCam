@@ -45,6 +45,8 @@ void CVideoSource::OnFrameData(uint8_t** data, uint32_t* linesize, uint32_t w, u
 {
 	if (frame_)
 	{
+		CAutoLock l(section_);
+
 		int pos = 0;
 		memcpy(frame_, data[0], linesize[0]*h);
 		pos = linesize[0] * h;

@@ -79,8 +79,8 @@ DWORD WINAPI CamThreadProc(LPVOID lpParam)
 
     CVideoSource source;
 
-    source.Start(pStream->m_Url, true, true, false, resize, pStream->m_currentWidth, pStream->m_currentHeight, pStream->m_Mode);
-    source.SetFrame(pStream->m_frame);
+    source.Start(pStream->m_Url, pStream->m_Loop, pStream->m_Retry, pStream->m_Qsv, resize, pStream->m_currentWidth, pStream->m_currentHeight, pStream->m_Mode);
+    source.SetFrame(pStream->m_frame, &pStream->m_cSharedFrame);
 
     while (!pStream->m_bStop)
     {
@@ -99,7 +99,7 @@ DWORD WINAPI CamThreadProc(LPVOID lpParam)
 
             if (now - source.lastRetry_ > timeout)
             {
-                bool rc = source.Start(pStream->m_Url, true, true, false, resize, pStream->m_currentWidth, pStream->m_currentHeight, pStream->m_Mode);
+                bool rc = source.Start(pStream->m_Url, pStream->m_Loop, pStream->m_Retry, pStream->m_Qsv, resize, pStream->m_currentWidth, pStream->m_currentHeight, pStream->m_Mode);
 
                 if (rc)
                     source.retry_ = 0;
@@ -199,6 +199,7 @@ HRESULT CVCamStream::FillBuffer(IMediaSample *pms)
     pms->GetPointer(&pData);
     lDataLen = pms->GetSize();
     
+    CAutoLock l(&m_cSharedFrame);
     memcpy(pData, m_frame, lDataLen);
 
     return NOERROR;
@@ -503,10 +504,8 @@ HRESULT CVCamStream::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *
     if (pTypeSupport) *pTypeSupport = KSPROPERTY_SUPPORT_GET; 
     return S_OK;
 }
-STDMETHODIMP get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, int* height, int* index, int* mode);
-STDMETHODIMP put_IVirtualCamParams(BSTR url, BOOL resize, int width, int height, int index, int mode);
 
-HRESULT CVCamStream::get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, int* height, int* index, int* mode)
+HRESULT CVCamStream::get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, int* height, int* index, int* mode, BOOL* loop, BOOL* retry, BOOL* qsv)
 {
     CAutoLock cAutolock(&m_camLock);
     CheckPointer(width, E_POINTER);
@@ -522,11 +521,14 @@ HRESULT CVCamStream::get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, 
     *height = m_Height;
     *index = m_Index;
     *mode = m_Mode;
+    *loop = m_Loop;
+    *retry = m_Retry;
+    *qsv = m_Qsv;
 
     return NOERROR;
 }
 
-HRESULT CVCamStream::put_IVirtualCamParams(BSTR url, BOOL resize, int width, int height, int index, int mode)
+HRESULT CVCamStream::put_IVirtualCamParams(BSTR url, BOOL resize, int width, int height, int index, int mode, BOOL loop, BOOL retry, BOOL qsv)
 {
     CAutoLock cAutolock(&m_camLock);
 
@@ -541,7 +543,9 @@ HRESULT CVCamStream::put_IVirtualCamParams(BSTR url, BOOL resize, int width, int
     m_Height = height;
     m_Index = index;
     m_Mode = mode;
-
+    m_Loop = loop;
+    m_Retry = retry;
+    m_Qsv = qsv;
 
     string url_str = szUtf8;
 
@@ -585,6 +589,9 @@ void CVCamStream::LoadProfile()
         m_Height = tree.get("Settings.Height", 720);
         m_Index = tree.get("Settings.Index", 1);
         m_Mode = tree.get("Settings.Mode", 0);
+        m_Loop = tree.get("Settings.Loop", true);
+        m_Retry = tree.get("Settings.Retry", true);
+        m_Qsv = tree.get("Settings.QsvDecode", true);
     }
     else
     {
@@ -594,6 +601,9 @@ void CVCamStream::LoadProfile()
         m_Height = 720;
         m_Index = 1;
         m_Mode = 0;
+        m_Loop = true;
+        m_Retry = true;
+        m_Qsv = true;
     }
 
     m_listSize[0] = { 1920, 1080 };
@@ -643,6 +653,9 @@ void CVCamStream::SaveProfile()
     tree.put("Settings.Height", m_Height);
     tree.put("Settings.Index", m_Index);
     tree.put("Settings.Mode", m_Mode);
+    tree.put("Settings.Loop", m_Loop);
+    tree.put("Settings.Retry", m_Retry);
+    tree.put("Settings.QsvDecode", m_Qsv);
 
     pt::write_ini(configPath.string(), tree);
 }
