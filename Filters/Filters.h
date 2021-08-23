@@ -1,6 +1,6 @@
 #pragma once
 
-#include "atlbase.h"
+#include <string>
 
 #define DECLARE_PTR(type, ptr, expr) type* ptr = (type*)(expr);
 
@@ -9,7 +9,6 @@ struct Video_Size
     int w;
     int h;
 };
-
 
 class CVCamStream;
 class CVCam : public CSource
@@ -69,8 +68,7 @@ public:
 
     HRESULT FillBuffer(IMediaSample *pms);
     HRESULT DecideBufferSize(IMemAllocator *pIMemAlloc, ALLOCATOR_PROPERTIES *pProperties);
-    HRESULT CheckMediaType(const CMediaType *pMediaType);
-    HRESULT GetMediaType(int iPosition, CMediaType *pmt);
+    HRESULT GetMediaType(CMediaType *pmt);
     HRESULT SetMediaType(const CMediaType *pmt);
     HRESULT OnThreadCreate(void);
     HRESULT OnThreadDestroy(void);
@@ -85,12 +83,17 @@ public:
     CCritSec    m_camLock;
     BOOL    m_bStop;
 
-    CComBSTR		m_Url;
+    std::string		m_Url;
     BOOL			m_Resize;
     int				m_Width;
     int				m_Height;
     int				m_Index;
     int				m_Mode;
+
+    int m_currentWidth;
+    int m_currentHeight;
+    int m_sourceWidth;
+    int m_sourceHeight;
 
 private:
     CVCam *m_pParent;

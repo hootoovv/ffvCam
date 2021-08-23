@@ -13,7 +13,7 @@
 #include "common.h"
 #include "Properties.h"
 #include "Filters.h"
-
+#include "videosource.h"
 
 CUnknown* CVCamProp::CreateInstance(LPUNKNOWN lpunk, HRESULT* phr)
 {
@@ -85,7 +85,7 @@ HRESULT CVCamProp::OnApplyChanges()
 {
     GetControlValues();
 
-    CheckPointer(m_vCam, E_POINTER);
+	CheckPointer(m_vCam, E_POINTER);
 	BSTR url = m_Url.Copy();
     m_vCam->put_IVirtualCamParams(url, m_Resize, m_Width, m_Height, m_Index, m_Mode);
 
@@ -139,10 +139,10 @@ INT_PTR CVCamProp::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			EnableWindow(GetDlgItem(m_Dlg, IDC_RADIO_CLIP), m_Resize);
 			EnableWindow(GetDlgItem(m_Dlg, IDC_RADIO_STRETCH), m_Resize);
 
-			EnableWindow(GetDlgItem(m_Dlg, IDC_EDIT_WIDTH), m_Index == 8);
-			EnableWindow(GetDlgItem(m_Dlg, IDC_EDIT_HEIGHT), m_Index == 8);
+			EnableWindow(GetDlgItem(m_Dlg, IDC_EDIT_WIDTH), m_Resize && m_Index == 8);
+			EnableWindow(GetDlgItem(m_Dlg, IDC_EDIT_HEIGHT), m_Resize && m_Index == 8);
 
-			return TRUE ;  
+			return TRUE ;
 		}	
 	case WM_DESTROY :  
 		{  
@@ -178,6 +178,38 @@ INT_PTR CVCamProp::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 				{
 					SetDlgItemText(m_Dlg, IDC_EDIT_URL, szFile);
 				}  
+			}
+			else if (LOWORD(wParam) == IDC_BUTTON_TEST)
+			{
+				TCHAR v[1024];
+				GetDlgItemText(m_Dlg, IDC_EDIT_URL, v, 1024);
+
+				char szUtf8[MAX_PATH];
+				ZeroMemory(szUtf8, sizeof(szUtf8));
+
+				WideCharToMultiByte(CP_UTF8, 0, v, -1, szUtf8, MAX_PATH, NULL, NULL);
+				string url = szUtf8;
+
+				if (!url.empty())
+				{
+					CVideoSource src;
+					int w = 1280;
+					int h = 720;
+					int f = 0;
+					bool rc = src.Check(szUtf8, &w, &h, &f);
+
+					if (rc)
+					{
+						TCHAR msg[1024];
+
+						(void)StringCchPrintf(msg, NUMELMS(msg), TEXT("Video Size: %dx%d\0"), w, h);
+						SetDlgItemText(m_Dlg, IDC_STATUS, msg);
+					}
+					else
+					{
+						SetDlgItemText(m_Dlg, IDC_STATUS, L"Failed to get video size.");
+					}
+				}
 			}
 			else if (LOWORD(wParam) == IDC_RADIO_SOURCE)
 			{
@@ -251,7 +283,7 @@ INT_PTR CVCamProp::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 }
 void CVCamProp::GetControlValues()
 {
-	if (IsDlgButtonChecked(m_Dlg, IDC_RADIO_FIT))
+	if (IsDlgButtonChecked(m_Dlg, IDC_RADIO_RESIZE))
 		m_Resize = TRUE;
 	else
 		m_Resize = FALSE;

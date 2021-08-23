@@ -5,9 +5,12 @@
 #include <stdio.h>
 #include <olectl.h>
 #include <dvdmedia.h>
+#include <atlbase.h>
+
 #include "common.h"
 #include "properties.h"
 #include "filters.h"
+#include "videosource.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -53,6 +56,16 @@ DWORD WINAPI CamThreadProc(LPVOID lpParam)
 {
     CVCamStream* pStream = (CVCamStream*)lpParam;
 
+    CVideoSource src;
+    int w = 1280;
+    int h = 720;
+    int f = 0;
+    bool rc = src.Check(pStream->m_Url, &w, &h, &f);
+
+    if (rc)
+    {
+        
+    }
 
     while (!pStream->m_bStop)
     {
@@ -69,10 +82,16 @@ DWORD WINAPI CamThreadProc(LPVOID lpParam)
 CVCamStream::CVCamStream(HRESULT *phr, CVCam *pParent, LPCWSTR pPinName) :
     CSourceStream(NAME(CAM_NAME),phr, pParent, pPinName), m_pParent(pParent)
 {
-    // Set the default media type
-    GetMediaType(0, &m_mt);
-
     LoadProfile();
+
+    // Set the default media type
+    GetMediaType(&m_mt);
+
+    DECLARE_PTR(VIDEOINFOHEADER, pvi, m_mt.Format());
+
+    m_currentWidth = pvi->bmiHeader.biWidth;
+    m_currentHeight = pvi->bmiHeader.biHeight;
+
 }
 
 CVCamStream::~CVCamStream()
@@ -152,15 +171,48 @@ STDMETHODIMP CVCamStream::Notify(IBaseFilter * pSender, Quality q)
 HRESULT CVCamStream::SetMediaType(const CMediaType *pmt)
 {
     DECLARE_PTR(VIDEOINFOHEADER, pvi, pmt->Format());
+
+    m_currentWidth = pvi->bmiHeader.biWidth;
+    m_currentHeight = pvi->bmiHeader.biHeight;
+
     HRESULT hr = CSourceStream::SetMediaType(pmt);
     return hr;
 }
 
 // See Directshow help topic for IAMStreamConfig for details on this method
-HRESULT CVCamStream::GetMediaType(int iPosition, CMediaType *pmt)
+HRESULT CVCamStream::GetMediaType(CMediaType *pmt)
 {
-    if(iPosition < 0) return E_INVALIDARG;
-    if(iPosition > 8) return VFW_S_NO_MORE_ITEMS;
+    LoadProfile();
+
+    int w = 1280;
+    int h = 720;
+
+    if (m_Resize)
+    {
+        if (m_Index >= 8)
+        {
+            w = m_Width;
+            h = m_Height;
+        }
+        else
+        {
+            w = m_listSize[m_Index].w;
+            h = m_listSize[m_Index].h;
+        }
+    }
+    else
+    {
+        if (m_sourceWidth != 0 && m_sourceHeight != 0)
+        {
+            w = m_sourceWidth;
+            h = m_sourceHeight;
+        }
+        else
+        {
+            w = m_Width;
+            h = m_Height;
+        }
+    }
 
     DECLARE_PTR(VIDEOINFOHEADER, pvi, pmt->AllocFormatBuffer(sizeof(VIDEOINFOHEADER)));
     ZeroMemory(pvi, sizeof(VIDEOINFOHEADER));
@@ -168,13 +220,13 @@ HRESULT CVCamStream::GetMediaType(int iPosition, CMediaType *pmt)
     pvi->bmiHeader.biCompression = MAKEFOURCC('I', '4', '2', '0');
     pvi->bmiHeader.biBitCount    = 12;
     pvi->bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
-    pvi->bmiHeader.biWidth       = m_listSize[iPosition].w;
-    pvi->bmiHeader.biHeight      = m_listSize[iPosition].h;
+    pvi->bmiHeader.biWidth       = w;
+    pvi->bmiHeader.biHeight      = h;
     pvi->bmiHeader.biPlanes      = 3;
-    pvi->bmiHeader.biSizeImage   = m_listSize[iPosition].w * m_listSize[iPosition].h * 3 / 2;
+    pvi->bmiHeader.biSizeImage   = w * h * 3 / 2;
     pvi->bmiHeader.biClrImportant = 0;
 
-    pvi->AvgTimePerFrame = 1000000;
+    pvi->AvgTimePerFrame = 333333;
 
     SetRectEmpty(&(pvi->rcSource)); // we want the whole image area rendered.
     SetRectEmpty(&(pvi->rcTarget)); // no particular destination rectangle
@@ -192,14 +244,7 @@ HRESULT CVCamStream::GetMediaType(int iPosition, CMediaType *pmt)
 
 } // GetMediaType
 
-// This method is called to see if a given output format is supported
-HRESULT CVCamStream::CheckMediaType(const CMediaType *pMediaType)
-{
-    VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *)(pMediaType->Format());
-    if(*pMediaType != m_mt) 
-        return E_INVALIDARG;
-    return S_OK;
-} // CheckMediaType
+
 
 // This method is called after the pins are connected to allocate buffers to stream data
 HRESULT CVCamStream::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *pProperties)
@@ -272,26 +317,55 @@ HRESULT STDMETHODCALLTYPE CVCamStream::GetFormat(AM_MEDIA_TYPE **ppmt)
 
 HRESULT STDMETHODCALLTYPE CVCamStream::GetNumberOfCapabilities(int *piCount, int *piSize)
 {
-    *piCount = 9;
+    *piCount = 1;
     *piSize = sizeof(VIDEO_STREAM_CONFIG_CAPS);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CVCamStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE **pmt, BYTE *pSCC)
 {
+    LoadProfile();
+
+    int w = 1280;
+    int h = 720;
+
+    if (m_Resize)
+    {
+        if (m_Index >= 8)
+        {
+            w = m_Width;
+            h = m_Height;
+        }
+        else
+        {
+            w = m_listSize[m_Index].w;
+            h = m_listSize[m_Index].h;
+        }
+    }
+    else
+    {
+        if (m_sourceWidth != 0 && m_sourceHeight != 0)
+        {
+            w = m_sourceWidth;
+            h = m_sourceHeight;
+        }
+        else
+        {
+            w = m_Width;
+            h = m_Height;
+        }
+    }
+
     *pmt = CreateMediaType(&m_mt);
     DECLARE_PTR(VIDEOINFOHEADER, pvi, (*pmt)->pbFormat);
-
-    if (iIndex > 8)
-        iIndex = 0;
 
     pvi->bmiHeader.biCompression = MAKEFOURCC('I', '4', '2', '0');
     pvi->bmiHeader.biBitCount    = 12;
     pvi->bmiHeader.biSize       = sizeof(BITMAPINFOHEADER);
-    pvi->bmiHeader.biWidth      = m_listSize[iIndex].w;
-    pvi->bmiHeader.biHeight     = m_listSize[iIndex].h;
+    pvi->bmiHeader.biWidth      = w;
+    pvi->bmiHeader.biHeight     = h;
     pvi->bmiHeader.biPlanes     = 3;
-    pvi->bmiHeader.biSizeImage  = m_listSize[iIndex].w * m_listSize[iIndex].h * 3 / 2;
+    pvi->bmiHeader.biSizeImage  = w * h * 3 / 2;
     pvi->bmiHeader.biClrImportant = 0;
 
     SetRectEmpty(&(pvi->rcSource)); // we want the whole image area rendered.
@@ -309,8 +383,8 @@ HRESULT STDMETHODCALLTYPE CVCamStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE *
     
     pvscc->guid = FORMAT_VideoInfo;
     pvscc->VideoStandard = AnalogVideo_None;
-    pvscc->InputSize.cx = m_listSize[iIndex].w;
-    pvscc->InputSize.cy = m_listSize[iIndex].h;
+    pvscc->InputSize.cx = w;
+    pvscc->InputSize.cy = h;
     pvscc->MinCroppingSize.cx = 0;
     pvscc->MinCroppingSize.cy = 0;
     pvscc->MaxCroppingSize.cx = 0;
@@ -320,17 +394,17 @@ HRESULT STDMETHODCALLTYPE CVCamStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE *
     pvscc->CropAlignX = 0;
     pvscc->CropAlignY = 0;
 
-    pvscc->MinOutputSize.cx = m_listSize[iIndex].w;
-    pvscc->MinOutputSize.cy = m_listSize[iIndex].h;
-    pvscc->MaxOutputSize.cx = m_listSize[iIndex].w;
-    pvscc->MaxOutputSize.cy = m_listSize[iIndex].h;
+    pvscc->MinOutputSize.cx = w;
+    pvscc->MinOutputSize.cy = h;
+    pvscc->MaxOutputSize.cx = w;
+    pvscc->MaxOutputSize.cy = h;
     pvscc->OutputGranularityX = 0;
     pvscc->OutputGranularityY = 0;
     pvscc->StretchTapsX = 0;
     pvscc->StretchTapsY = 0;
     pvscc->ShrinkTapsX = 0;
     pvscc->ShrinkTapsY = 0;
-    pvscc->MinFrameInterval = 200000;   //50 fps
+    pvscc->MinFrameInterval = 166667;   //60 fps
     pvscc->MaxFrameInterval = 50000000; // 0.2 fps
     pvscc->MinBitsPerSecond = (pvi->bmiHeader.biSizeImage * 8) / 5;
     pvscc->MaxBitsPerSecond = pvi->bmiHeader.biSizeImage * 8 * 50;
@@ -390,7 +464,11 @@ HRESULT CVCamStream::get_IVirtualCamParams(BSTR* url, BOOL* resize, int* width, 
     CheckPointer(width, E_POINTER);
     CheckPointer(height, E_POINTER);
 
-    *url = m_Url.Copy();
+    TCHAR szUrl[1024];
+    ZeroMemory(szUrl, sizeof(szUrl));
+    MultiByteToWideChar(CP_UTF8, 0, m_Url.c_str(), m_Url.length(), szUrl, 1024);
+
+    *url = szUrl;
     *resize = m_Resize;
     *width = m_Width;
     *height = m_Height;
@@ -404,12 +482,35 @@ HRESULT CVCamStream::put_IVirtualCamParams(BSTR url, BOOL resize, int width, int
 {
     CAutoLock cAutolock(&m_camLock);
 
-    m_Url = url;
+    char szUtf8[MAX_PATH];
+    ZeroMemory(szUtf8, sizeof(szUtf8));
+
+    WideCharToMultiByte(CP_UTF8, 0, url, -1, szUtf8, MAX_PATH, NULL, NULL);
+
+    m_Url = szUtf8;
     m_Resize = resize;
     m_Width = width;
     m_Height = height;
     m_Index = index;
     m_Mode = mode;
+
+
+    string url_str = szUtf8;
+
+    if (!url_str.empty() && !m_Resize)
+    {
+        CVideoSource src;
+        int w = 1280;
+        int h = 720;
+        int f = 0;
+        bool rc = src.Check(szUtf8, &w, &h, &f);
+
+        if (rc)
+        {
+            m_Width = w;
+            m_Height = h;
+        }
+    }
 
     SaveProfile();
 
@@ -430,9 +531,7 @@ void CVCamStream::LoadProfile()
     if (fs::exists(configPath.string()))
     {
         pt::read_ini(configPath.string(), tree);
-        string url = tree.get("Settings.Source", "");
-
-        m_Url = url.c_str();
+        m_Url = tree.get("Settings.Source", "");
         m_Resize = tree.get("Settings.Resize", false);
         m_Width = tree.get("Settings.Width", 1280);
         m_Height = tree.get("Settings.Height", 720);
@@ -441,7 +540,7 @@ void CVCamStream::LoadProfile()
     }
     else
     {
-        m_Url = L"";
+        m_Url = "";
         m_Resize = false;
         m_Width = 1280;
         m_Height = 720;
@@ -449,17 +548,31 @@ void CVCamStream::LoadProfile()
         m_Mode = 0;
     }
 
-    m_listSize[0] = { m_Width, m_Height };
+    m_listSize[0] = { 1920, 1080 };
+    m_listSize[1] = { 1280, 720 };
+    m_listSize[2] = { 960, 540 };
+    m_listSize[3] = { 640, 360 };
+    m_listSize[4] = { 1440, 1080 };
+    m_listSize[5] = { 960, 720 };
+    m_listSize[6] = { 640, 480 };
+    m_listSize[7] = { 480, 360 };
 
-    m_listSize[1] = { 1920, 1080 };
-    m_listSize[2] = { 1280, 720 };
-    m_listSize[3] = { 960, 540 };
-    m_listSize[4] = { 640, 360 };
+    if (m_Url.empty())
+    {
+        m_sourceWidth = 0;
+        m_sourceHeight = 0;
+    } 
+    else
+    {
+        CVideoSource src;
+        int w = 1280;
+        int h = 720;
+        int f = 0;
+        bool rc = src.Check(m_Url, &w, &h, &f);
 
-    m_listSize[5] = { 1440, 1080 };
-    m_listSize[6] = { 960, 720 };
-    m_listSize[7] = { 640, 480 };
-    m_listSize[8] = { 480, 360 };
+        m_sourceWidth = w;
+        m_sourceHeight = h;
+    }
 
 }
 
@@ -476,12 +589,7 @@ void CVCamStream::SaveProfile()
     configPath.append("ffvcam.ini");
 
     pt::ptree tree;
-
-    char szUtf8[MAX_PATH];
-
-    WideCharToMultiByte(CP_UTF8, 0, m_Url, -1, szUtf8, MAX_PATH, NULL, NULL);
-
-    tree.put("Settings.Source", szUtf8);
+    tree.put("Settings.Source", m_Url);
     tree.put("Settings.Resize", m_Resize);
     tree.put("Settings.Width", m_Width);
     tree.put("Settings.Height", m_Height);
@@ -489,6 +597,5 @@ void CVCamStream::SaveProfile()
     tree.put("Settings.Mode", m_Mode);
 
     pt::write_ini(configPath.string(), tree);
-
 }
 
