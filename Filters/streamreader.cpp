@@ -941,7 +941,7 @@ void CStreamReader::DemuxingThread()
 							/* copy decoded frame to destination buffer:
 							* this is required since rawvideo expects non aligned data */
 							av_image_copy(video_dst_data, video_dst_linesize, (const uint8_t**)(fr->data), fr->linesize, m_OutputFormat, m_OutputWidth, m_OutputHeight);
-							if (!bResize)
+							if (m_bConvertOutput && !bResize)
 								av_frame_unref(fr);
 
 							m_LastActiveTime = time_stamp + m_PlayTime;
