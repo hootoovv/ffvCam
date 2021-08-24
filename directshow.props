@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" >
-    <DirectShowSamplesDir>D:\Dev\Github\Windows-classic-samples\Samples\Win7Samples\multimedia\directshow\baseclasses</DirectShowSamplesDir>
-    <FFMpegDir>D:\Dev\Github\zktr\ffvcam\boost_1_76_0</FFMpegDir>
-    <MSDKDir>D:\Dev\Github\zktr\ffvcam\msdk</MSDKDir>
-    <BoostDir>D:\Dev\Github\zktr\ffvcam\ffmpeg4.4</BoostDir>
+    <DirectShowSamplesDir>D:\Dev\Projects\VC\directshow\baseclasses</DirectShowSamplesDir>
+    <FFMpegDir>D:\Dev\Projects\VC\ffvcam\boost_1_76_0</FFMpegDir>
+    <MSDKDir>D:\Dev\Projects\VC\ffvcam\msdk</MSDKDir>
+    <BoostDir>D:\Dev\Projects\VC\ffvcam\ffmpeg4.4</BoostDir>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>
