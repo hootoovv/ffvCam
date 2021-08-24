@@ -710,7 +710,7 @@ void CStreamReader::DemuxingThread()
 				sws_ctx = sws_getContext(m_Params.videoWidth_, m_Params.videoHeight_, AV_PIX_FMT_NV12,
 					m_Params.videoWidth_, m_Params.videoHeight_, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
 
-				ret = av_image_alloc(frame420P->data, frame420P->linesize, m_Params.videoWidth_, m_Params.videoHeight_, AV_PIX_FMT_YUV420P, 1);
+				ret = av_image_alloc(frame420P->data, frame420P->linesize, m_Params.videoWidth_, m_Params.videoHeight_, AV_PIX_FMT_YUV420P, 4);
 				if (ret < 0)
 				{
 					cout << "Could not allocate raw video buffer3." << endl;
