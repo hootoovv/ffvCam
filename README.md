@@ -1,3 +1,44 @@
+# ffvCam
+
+This repository is based on Vivek's DirectSHow VCam. It has enhanced to support local video file or network video source playback. it also add a setting dialog to config video source and some more features.
+
+![](settings.png)
+
+### Config Guide
+1. You can provide an URL for the video source or use "..." button to select a local media file.
+2. Test button will check the video source and give the original vidoe size in bottom display area.
+3. For local file, you can choose "Loop Playback", then it will auto loopback when play to end of file. Or for network video feed, you can choose "Retry When Disconnection", it will keep retry untill the video feed is available.
+4. This vCam so far only support Intel QSV Hardware decode. For NvDec, raise PR.
+5. This vCam only provide one MediaType (source filter's size), but the size is variable accoriding to settings. I suggest you choose "Resize To Fix Size" option, then you can get a stable source size. If you choose "Same As Source", it may give a default 1280x720 output. If you do want to use the source size and the source size is pretty stable, I suggest you use Resize option and choose Customization size (give url, test, then input the value to customization.)
+6. It provides 3 resize mode.
+> * Pan: Auto add black bars on top/bottom or left/right (depends on your input and output video ratio)
+> * Crop: Clip the input to maxmize source video size (some video area will be crop to fit output ratio)
+> * Stretch: This will not keep the source input video ratio
+7. Due to the limitaion of original code, please use Apply button each time you want to save the settings. OK button did nothing except close the dialog. Sometime to make the setting take effect, you may need to restart the filter or application.
+8. The settings will store into a ini file: .ffvcam\ffvcam.ini (under userprofile folder: e.g. D:\Users\blablabla\.ffvcam\ffvcam.ini).
+9. It supports cusotmized background BMP image. To enable this feature, please put a file named ffvcam.bmp into the same folder as above ini file. So far it only support 24bit BMP format file. 
+
+### Dependency
+
+* VS2019 https://visualstudio.microsoft.com/
+* ffmpeg4.4 http://ffmpeg.org/
+* intel media sdk (for QSV decode) https://software.intel.com/content/www/us/en/develop/tools/media-sdk.html
+* boost 1.76 https://www.boost.org/
+
+
+### Steps
+
+get ffmpeg 4.4 windows x64 build files (include, lib, dll) from https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full-shared.7z
+
+get boost 1_76_0 from https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.7z. It is a waste, for I only use the boost::thread.
+
+start VS2019 cmd prompt, go to boost_1_76_0, run bootstrap.bat to generate boost build tool b2.exe
+
+.\b2 toolset=msvc-142 architecture=x86 address-model=64 link=static threading=multi runtime-link=static --with-thread --with-date_time --with-log --with-filesystem
+
+Below are original Readme
+---
+
 # DirectShow VCam
 
 This repository contains [Vivek](https://groups.google.com/g/microsoft.public.win32.programmer.directx.video/c/1beZkSCb0KE/m/5VF366wR3CcJ)'s Capture Source Filter filter, a popular DirectShow sample project, which recently celebrated its 16th anniversary ([2005 posting reference](https://groups.google.com/g/microsoft.public.win32.programmer.directx.video/c/WRuNmZsWj-o/m/-l4sKR_2o-EJ)).

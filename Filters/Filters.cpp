@@ -152,9 +152,26 @@ CVCamStream::~CVCamStream()
 
 void CVCamStream::LoadBG()
 {
-    HBITMAP hBmp = LoadBitmap(g_hinst, MAKEINTRESOURCE(IDB_BITMAP_BG));
+    TCHAR szPath[MAX_PATH];
+    GetEnvironmentVariable(L"USERPROFILE", szPath, MAX_PATH);
 
-    SIZE sz = {800, 600};
+    fs::path bmpPath(szPath);
+    bmpPath.append(".ffvcam");
+    bmpPath.append("ffvcam.bmp");
+
+    HBITMAP hBmp;
+
+    if (fs::exists(bmpPath.string()))
+    {
+        hBmp = (HBITMAP) LoadImage(NULL, bmpPath.wstring().c_str(), IMAGE_BITMAP, 1280, 720, LR_LOADFROMFILE | LR_DEFAULTCOLOR);
+    }
+    else
+    {
+        hBmp = LoadBitmap(g_hinst, MAKEINTRESOURCE(IDB_BITMAP_BG));
+    }
+
+
+    SIZE sz = {1280, 720};
 
     int bmpSize = sz.cx * sz.cy * 4;
     uint8_t* bmp = new uint8_t[bmpSize];
@@ -660,7 +677,7 @@ void CVCamStream::LoadProfile()
     m_listSize[5] = { 960, 720 };
     m_listSize[6] = { 640, 480 };
     m_listSize[7] = { 480, 360 };
-
+    
     //if (m_Url.empty())
     //{
     //    m_sourceWidth = 0;
@@ -673,7 +690,7 @@ void CVCamStream::LoadProfile()
     //    int h = 720;
     //    int f = 0;
     //    bool rc = src.Check(m_Url, &w, &h, &f);
-
+    
     //    m_sourceWidth = w;
     //    m_sourceHeight = h;
     //}
