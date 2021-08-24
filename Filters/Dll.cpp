@@ -68,6 +68,7 @@ CFactoryTemplate g_Templates[] =
 };
 
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
+HINSTANCE g_hinst;
 
 STDAPI RegisterFilters( BOOL bRegister )
 {
@@ -140,5 +141,6 @@ extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD  dwReason, LPVOID lpReserved)
 {
-	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
+    g_hinst = (HINSTANCE)(hModule);
+	return DllEntryPoint(g_hinst, dwReason, lpReserved);
 }

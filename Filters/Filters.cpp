@@ -22,6 +22,8 @@ using namespace boost;
 namespace fs = boost::filesystem;
 namespace pt = boost::property_tree;
 
+extern HINSTANCE g_hinst;
+
 //////////////////////////////////////////////////////////////////////////
 //  CVCam is the source filter which masquerades as a capture device
 //////////////////////////////////////////////////////////////////////////
@@ -139,12 +141,56 @@ CVCamStream::CVCamStream(HRESULT *phr, CVCam *pParent, LPCWSTR pPinName) :
     int frameSize = m_currentWidth * m_currentHeight * 3;// 12 / 8;
     m_frame = new BYTE[frameSize];
     ZeroMemory(m_frame, frameSize);
+
+    LoadBG();
 }
 
 CVCamStream::~CVCamStream()
 {
     delete[] m_frame;
 } 
+
+void CVCamStream::LoadBG()
+{
+    HBITMAP hBmp = LoadBitmap(g_hinst, MAKEINTRESOURCE(IDB_BITMAP_BG));
+
+    SIZE sz = {800, 600};
+
+    int bmpSize = sz.cx * sz.cy * 4;
+    uint8_t* bmp = new uint8_t[bmpSize];
+    GetBitmapBits(hBmp, bmpSize, bmp);
+
+    AVFrame* frame420P = av_frame_alloc();
+    SwsContext* sws_ctx = nullptr;
+    uint8_t* video_dst_data[4] = { bmp, nullptr, nullptr, nullptr };
+    int      video_dst_linesize[4] = { sz.cx*4, 0, 0, 0 };
+
+    sws_ctx = sws_getContext(sz.cx, sz.cy, AV_PIX_FMT_BGRA,
+        m_currentWidth, m_currentHeight, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
+    
+    int ret = av_image_alloc(frame420P->data, frame420P->linesize, m_currentWidth, m_currentHeight, AV_PIX_FMT_YUV420P, 1);
+    if (ret >= 0)
+    {
+        int h = sws_scale(sws_ctx, (uint8_t const* const*)video_dst_data, video_dst_linesize, 0,
+                   sz.cy, frame420P->data, frame420P->linesize);
+
+        int pos = 0;
+        memcpy(m_frame, frame420P->data[0], frame420P->linesize[0] * h);
+        pos = frame420P->linesize[0] * h;
+        memcpy(m_frame + pos, frame420P->data[1], frame420P->linesize[1] * h / 2);
+        pos += frame420P->linesize[1] * h / 2;
+        memcpy(m_frame + pos, frame420P->data[2], frame420P->linesize[2] * h / 2);
+    }
+
+    if (sws_ctx)
+        sws_freeContext(sws_ctx);
+
+    if (frame420P)
+        av_frame_free(&frame420P);
+
+    DeleteObject(hBmp);
+    delete[] bmp;
+}
 
 HRESULT CVCamStream::QueryInterface(REFIID riid, void **ppv)
 {   
@@ -251,16 +297,16 @@ HRESULT CVCamStream::GetMediaType(CMediaType *pmt)
     }
     else
     {
-        if (m_sourceWidth != 0 && m_sourceHeight != 0)
-        {
-            w = m_sourceWidth;
-            h = m_sourceHeight;
-        }
-        else
-        {
+        //if (m_sourceWidth != 0 && m_sourceHeight != 0)
+        //{
+        //    w = m_sourceWidth;
+        //    h = m_sourceHeight;
+        //}
+        //else
+        //{
             w = m_Width;
             h = m_Height;
-        }
+        //}
     }
 
     DECLARE_PTR(VIDEOINFOHEADER, pvi, pmt->AllocFormatBuffer(sizeof(VIDEOINFOHEADER)));
@@ -393,16 +439,16 @@ HRESULT STDMETHODCALLTYPE CVCamStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE *
     }
     else
     {
-        if (m_sourceWidth != 0 && m_sourceHeight != 0)
-        {
-            w = m_sourceWidth;
-            h = m_sourceHeight;
-        }
-        else
-        {
+        //if (m_sourceWidth != 0 && m_sourceHeight != 0)
+        //{
+        //    w = m_sourceWidth;
+        //    h = m_sourceHeight;
+        //}
+        //else
+        //{
             w = m_Width;
             h = m_Height;
-        }
+        //}
     }
 
     *pmt = CreateMediaType(&m_mt);
@@ -584,7 +630,7 @@ void CVCamStream::LoadProfile()
     {
         pt::read_ini(configPath.string(), tree);
         m_Url = tree.get("Settings.Source", "");
-        m_Resize = tree.get("Settings.Resize", false);
+        m_Resize = tree.get("Settings.Resize", true);
         m_Width = tree.get("Settings.Width", 1280);
         m_Height = tree.get("Settings.Height", 720);
         m_Index = tree.get("Settings.Index", 1);
@@ -615,22 +661,22 @@ void CVCamStream::LoadProfile()
     m_listSize[6] = { 640, 480 };
     m_listSize[7] = { 480, 360 };
 
-    if (m_Url.empty())
-    {
-        m_sourceWidth = 0;
-        m_sourceHeight = 0;
-    } 
-    else
-    {
-        CVideoSource src;
-        int w = 1280;
-        int h = 720;
-        int f = 0;
-        bool rc = src.Check(m_Url, &w, &h, &f);
+    //if (m_Url.empty())
+    //{
+    //    m_sourceWidth = 0;
+    //    m_sourceHeight = 0;
+    //} 
+    //else
+    //{
+    //    CVideoSource src;
+    //    int w = 1280;
+    //    int h = 720;
+    //    int f = 0;
+    //    bool rc = src.Check(m_Url, &w, &h, &f);
 
-        m_sourceWidth = w;
-        m_sourceHeight = h;
-    }
+    //    m_sourceWidth = w;
+    //    m_sourceHeight = h;
+    //}
 
 }
 

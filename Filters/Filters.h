@@ -80,6 +80,8 @@ public:
     void LoadProfile();
     void SaveProfile();
 
+    void LoadBG();
+
     CCritSec    m_camLock;
     BOOL    m_bStop;
 
@@ -97,8 +99,8 @@ public:
 
     int m_currentWidth;
     int m_currentHeight;
-    int m_sourceWidth;
-    int m_sourceHeight;
+    //int m_sourceWidth;
+    //int m_sourceHeight;
 
     CCritSec m_cSharedFrame;
 
