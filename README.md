@@ -25,6 +25,7 @@ This repository is based on Vivek's DirectSHow VCam. It has enhanced to support 
 * intel media sdk (for QSV decode) https://software.intel.com/content/www/us/en/develop/tools/media-sdk.html
 * boost 1.76 https://www.boost.org/
 
+Note: For directshow related .h and lib please refter to hootoovv's screenCam project directshow folder. You can change your variable in directshow.props to point to that folder.
 
 ### Steps
 
@@ -35,6 +36,8 @@ get boost 1_76_0 from https://boostorg.jfrog.io/artifactory/main/release/1.76.0/
 start VS2019 cmd prompt, go to boost_1_76_0, run bootstrap.bat to generate boost build tool b2.exe
 
 .\b2 toolset=msvc-142 architecture=x86 address-model=64 link=static threading=multi runtime-link=static --with-thread --with-date_time --with-log --with-filesystem
+
+Note: To compile, don't forget change your directshow.props.
 
 Below are original Readme
 ---
